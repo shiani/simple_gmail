@@ -1,74 +1,15 @@
 
 #!/usr/bin/env python
 
-from base64 import urlsafe_b64decode, urlsafe_b64encode
+from base64 import urlsafe_b64decode
 import email
-from email.mime.audio import MIMEAudio
-from email.mime.base import MIMEBase
-from email.mime.image import MIMEImage
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
 import os
 import pickle
 from google.auth.transport.requests import Request
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
-from mimetypes import guess_type as guess_mime_type
 
 
-
-class Message:
-
-    def __init__(self, destination, subject, body, attachments=[]) -> None:
-        self.destination = destination
-        self.subject = subject
-        self.body = body
-        self.attachments = attachments
-
-    @staticmethod
-    def add_attachment(message, filename):
-        content_type, encoding = guess_mime_type(filename)
-        if content_type is None or encoding is not None:
-            content_type = 'application/octet-stream'
-        main_type, sub_type = content_type.split('/', 1)
-        if main_type == 'text':
-            fp = open(filename, 'rb')
-            msg = MIMEText(fp.read().decode(), _subtype=sub_type)
-            fp.close()
-        elif main_type == 'image':
-            fp = open(filename, 'rb')
-            msg = MIMEImage(fp.read(), _subtype=sub_type)
-            fp.close()
-        elif main_type == 'audio':
-            fp = open(filename, 'rb')
-            msg = MIMEAudio(fp.read(), _subtype=sub_type)
-            fp.close()
-        else:
-            fp = open(filename, 'rb')
-            msg = MIMEBase(main_type, sub_type)
-            msg.set_payload(fp.read())
-            fp.close()
-        filename = os.path.basename(filename)
-        msg.add_header('Content-Disposition', 'attachment', filename=filename)
-        message.attach(msg)
-
-    def build_message(self):
-        if not self.attachments: # no attachments given
-            message = MIMEText(self.body)
-            message['to'] = self.destination
-            message['from'] = "test26391@gmail.com"
-            message['subject'] = self.subject
-        else:
-            message = MIMEMultipart()
-            message['to'] = self.destination
-            message['from'] = "test26391@gmail.com"
-            message['subject'] = self.subject
-            message.attach(MIMEText(self.body))
-            for filename in self.attachments:
-                self.add_attachment(message, filename)
-
-        return {'raw': urlsafe_b64encode(message.as_bytes()).decode()}
-    
 
 class SendMail:
 
@@ -214,9 +155,3 @@ class Gmail:
         return SearchMail(self.service).search_by_query(query)
 
 
-my_message = Message("shiani@outlook.com", "2this is a test from new version", "2Hello I'm testing new version of sending emails", attachments=["/Users/hamed/Codes/Gmail/requierments.txt"])
-
-my_gmail = Gmail()
-
-my_gmail.send_mail(my_message)
-results = my_gmail.search_mail("test")
