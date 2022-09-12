@@ -6,7 +6,7 @@ from mimetypes import guess_type as guess_mime_type
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from base64 import urlsafe_b64encode
-
+import os
 
 class Message:
 
