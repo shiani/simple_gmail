@@ -97,6 +97,11 @@ class SearchMail:
                     os.chdir(f"{mail['Date'][5:-6]}")
                     file_path = os.getcwd()
                     os.chdir(current_path)
+                else:
+                    os.chdir(f"./{mail['LabelIds']}")
+                    os.chdir(f"{mail['Date'][5:-6]}")
+                    file_path = os.getcwd()
+                    os.chdir(current_path)
 
                 for part in ps:
                     part_headers = part.get("headers")
@@ -148,33 +153,30 @@ class Gmail:
 
     """
 
-    def __init__(self, cred_file_path) -> None:
+    def __init__(self) -> None:
         self._cred = None
         self._scopes = ['https://mail.google.com/']
         self.__authenticate__()
-        self.cred_file = cred_file_path
+        # self.cred_file = cred_file_path
 
     def __authenticate__(self) -> None:
-        try:
-            # if user has credentials
-            if os.path.exists("token.pickle"):
-                with open("token.pickle", "rb") as token:
-                    self._cred = pickle.load(token)
+        # if user has credentials
+        if os.path.exists("token.pickle"):
+            with open("token.pickle", "rb") as token:
+                self._cred = pickle.load(token)
 
-            # if there are no (valid) credentials availablle, let the user log in.
-            if not self._cred or not self._cred.valid:
-                if self._cred and self._cred.expired and self._cred.refresh_token:
-                    self._cred.refresh(Request())
-                else:
-                    flow = InstalledAppFlow.from_client_secrets_file(
-                        self.cred_file, self._scopes)
-                    self._cred = flow.run_local_server(port=0)
-                # save the credentials for the next run
-                with open("token.pickle", "wb") as token:
-                    pickle.dump(self._cred, token)
-            self.service = build('gmail', 'v1', credentials=self._cred)
-        except:
-            raise ConnectionError("Authentication failed")
+        # if there are no (valid) credentials availablle, let the user log in.
+        if not self._cred or not self._cred.valid:
+            if self._cred and self._cred.expired and self._cred.refresh_token:
+                self._cred.refresh(Request())
+            else:
+                flow = InstalledAppFlow.from_client_secrets_file('cred.json', self._scopes)
+                self._cred = flow.run_local_server(port=0)
+            # save the credentials for the next run
+            with open("token.pickle", "wb") as token:
+                pickle.dump(self._cred, token)
+        self.service = build('gmail', 'v1', credentials=self._cred)
+
 
     def send_mail(self, message: Message):
 

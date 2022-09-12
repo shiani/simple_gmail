@@ -18,7 +18,7 @@ class Message:
         attachments: list of atachments paths
 
     """
-    def __init__(self,From: str, To: str, subject: str, body: str, attachments: list =[]) -> None:
+    def __init__(self,From: str, To: str, subject: str, body: str, attachments=[]) -> None:
         self.To = To
         self.From = From
         self.subject = subject
@@ -56,7 +56,7 @@ class Message:
         message['from'] = self.From
         message['subject'] = self.subject
         message.attach(MIMEText(self.body))
-        if not self.attachments: 
+        if self.attachments: 
             for filename in self.attachments:
                 self.add_attachment(message, filename)
 
