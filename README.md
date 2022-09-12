@@ -42,7 +42,7 @@ from simple_gmail.message import Message
 g = Gmail()
 
 # create 
-m = Message(From='your name', To="destination@example.com", subject="some subject", body="some body", attachments=['/root/to/attachment1', '/root/to/attachment1'])
+m = Message(From='your name', To="destination@example.com", subject="some subject", body="some body", attachments=['/root/to/attachment1', '/root/to/attachment2'])
 
 # send your mail
 g.send_mail(m)
