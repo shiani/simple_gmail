@@ -6,7 +6,7 @@ This is a Gmail Task for Haensel AMS RecruitingTeam
 
 ## Installation
 
-Install my-project with npm
+Install requierments with pip
 
 ```bash
   pip install -r requierments.txt
