@@ -1,6 +1,6 @@
 
 #!/usr/bin/env python
-from .Message import Message
+from .message import Message
 from base64 import urlsafe_b64decode
 import email
 import os
@@ -8,7 +8,6 @@ import pickle
 from google.auth.transport.requests import Request
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
-
 
 
 class SendMail:
@@ -22,10 +21,10 @@ class SendMail:
     """
 
     def __init__(self, service) -> None:
-        self.service = service    
-    
+        self.service = service
+
     def send_mail(self, message):
-        return self.service.users().messages().send(userId='me', body= message.build_message()).execute()
+        return self.service.users().messages().send(userId='me', body=message.build_message()).execute()
 
 
 class SearchMail:
@@ -40,14 +39,14 @@ class SearchMail:
     Returns:
         a list of founded mails in SENTBOX or INBOX, 
             include LabelIds, Subject, From, To, Date, Attachments and Body of the mail.
-    
+
     """
+
     def __init__(self, service) -> None:
         self.service = service
 
-    
     def search_by_query(self, query: str) -> list:
-        # grab the message instances of searched query 
+        # grab the message instances of searched query
         result = self.service.users().messages().list(userId='me', q=query).execute()
         mail_list = list()
         # if any message found the result include 'messages' key
@@ -55,7 +54,8 @@ class SearchMail:
 
             for item in result['messages']:
                 # grab the message instance
-                message = self.service.users().messages().get(userId='me', id=item['id'],format='raw').execute()
+                message = self.service.users().messages().get(
+                    userId='me', id=item['id'], format='raw').execute()
                 # decode the raw string, ASCII works pretty well here
                 msg_str = urlsafe_b64decode(message['raw'].encode('ASCII'))
 
@@ -66,7 +66,7 @@ class SearchMail:
                 parts = mime_msg.get_payload()
                 # return the encoded text
                 final_content = parts[0]
-                
+
                 # create mail dictionary
                 mail = dict()
                 mail['LabelIds'] = message['labelIds'][0]
@@ -77,12 +77,11 @@ class SearchMail:
                 mail['Attachments'] = []
 
                 # request the mail again with full format to grab the payloads of mail
-                msg = self.service.users().messages().get(userId='me', id=item['id'], format='full').execute()
+                msg = self.service.users().messages().get(
+                    userId='me', id=item['id'], format='full').execute()
                 payload = msg['payload']
                 # headers = payload.get("headers")
                 ps = payload.get("parts")
-                
-                
 
                 # create folder for attachment
                 current_path = os.getcwd()
@@ -109,29 +108,31 @@ class SearchMail:
                         part_header_value = part_header.get("value")
                         if part_header_name == "Content-Disposition":
                             if "attachment" in part_header_value:
-                                # we get the attachment ID 
+                                # we get the attachment ID
                                 # and make another request to get the attachment itself
                                 attachment_id = body.get("attachmentId")
                                 attachment = self.service.users().messages() \
-                                            .attachments().get(id=attachment_id, userId='me', messageId=message['id']).execute()
+                                    .attachments().get(id=attachment_id, userId='me', messageId=message['id']).execute()
                                 data = attachment.get("data")
                                 filepath = os.path.join(file_path, filename)
                                 # write data in folder
                                 if data:
                                     with open(filepath, "wb") as f:
                                         f.write(urlsafe_b64decode(data))
-                                        mail['Attachments'].append(f'{filepath}')
+                                        mail['Attachments'].append(
+                                            f'{filepath}')
 
                 # this is because of the diffrence between sentbox and mailbox
                 if len(final_content.get_payload()[0]) > 1:
-                    mail['Body'] = final_content.get_payload()[0].get_payload().strip()
+                    mail['Body'] = final_content.get_payload()[
+                        0].get_payload().strip()
                 else:
                     mail['Body'] = final_content.get_payload()
-                
 
                 mail_list.append(mail)
 
         return mail_list
+
 
 class Gmail:
 
@@ -146,12 +147,12 @@ class Gmail:
                     authentication needs a cred.json path.
 
     """
+
     def __init__(self, cred_file_path) -> None:
         self._cred = None
         self._scopes = ['https://mail.google.com/']
         self.__authenticate__()
         self.cred_file = cred_file_path
-
 
     def __authenticate__(self) -> None:
         try:
@@ -165,7 +166,8 @@ class Gmail:
                 if self._cred and self._cred.expired and self._cred.refresh_token:
                     self._cred.refresh(Request())
                 else:
-                    flow = InstalledAppFlow.from_client_secrets_file(self.cred_file, self._scopes)
+                    flow = InstalledAppFlow.from_client_secrets_file(
+                        self.cred_file, self._scopes)
                     self._cred = flow.run_local_server(port=0)
                 # save the credentials for the next run
                 with open("token.pickle", "wb") as token:
@@ -174,13 +176,10 @@ class Gmail:
         except:
             raise ConnectionError("Authentication failed")
 
-
     def send_mail(self, message: Message):
 
         return SendMail(self.service).send_mail(message)
-    
+
     def search_mail(self, query: str) -> list:
 
         return SearchMail(self.service).search_by_query(query)
-
-
